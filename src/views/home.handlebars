@@ -1,0 +1,15 @@
+<div class="container mt-5">
+  <h1 class="mb-4">Generador de Datos Mock - eShop</h1>
+  <button class="btn btn-primary mb-3" onclick="generateData()">Generar Usuarios y Productos</button>
+  <pre id="output" class="bg-light p-3 rounded border"></pre>
+</div>
+
+<script>
+  async function generateData() {
+    const res = await fetch('/api/mocks/generateData?users=5&products=10', {
+      method: 'POST'
+    });
+    const data = await res.json();
+    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+  }
+</script>
