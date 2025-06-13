@@ -1,0 +1,332 @@
+# src/docs/Users.yml
+
+# Definición de las etiquetas que agrupan los endpoints
+tags:
+  - name: Users
+    description: Operaciones relacionadas con los usuarios del E-commerce BE3SHOP.
+
+# Definición de los esquemas (modelos de datos)
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: ID único del usuario
+          example: 60d5ec49c6d3f2001c2a3e4d
+        firstName:
+          type: string
+          description: Nombre del usuario
+          example: Juan
+        lastName:
+          type: string
+          description: Apellido del usuario
+          example: Perez
+        email:
+          type: string
+          format: email
+          description: Email único del usuario
+          example: juan.perez@be3shop.com
+        age:
+          type: integer
+          description: Edad del usuario
+          example: 30
+        role:
+          type: string
+          description: Rol del usuario (user o admin)
+          enum: [user, admin]
+          example: user
+        isActive:
+          type: boolean
+          description: Estado de actividad del usuario (para soft delete)
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación del usuario
+          example: '2024-03-20T14:30:00Z' # Ejemplo actualizado para BE3SHOP
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de la última actualización del usuario
+          example: '2024-03-22T16:45:00Z'
+      required:
+        - firstName
+        - lastName
+        - email
+        - password # Aunque no se devuelve, es parte del modelo de creación/registro
+        - age
+    
+    User_Input:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: Nombre del usuario
+          example: Juan
+        lastName:
+          type: string
+          description: Apellido del usuario
+          example: Perez
+        email:
+          type: string
+          format: email
+          description: Email único del usuario
+          example: juan.perez@be3shop.com
+        age:
+          type: integer
+          description: Edad del usuario
+          example: 30
+        password:
+          type: string
+          format: password
+          description: Contraseña del usuario
+          example: MySecurePassword123
+        role:
+          type: string
+          description: Rol del usuario (user o admin). Solo para admin al crear/actualizar otros usuarios.
+          enum: [user, admin]
+          example: user
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+        - age
+
+# Definición de los endpoints (rutas)
+paths:
+  /api/users/profile:
+    get:
+      summary: Obtener el perfil del usuario autenticado.
+      tags:
+        - Users
+      description: Recupera la información del perfil del usuario que ha iniciado sesión en BE3SHOP.
+      security:
+        - bearerAuth: [] # Indica que esta ruta requiere autenticación (ej. JWT Token)
+      responses:
+        '200':
+          description: Perfil del usuario recuperado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  payload: { $ref: '#/components/schemas/User' }
+        '401':
+          description: No autorizado. El usuario no está autenticado.
+        '404':
+          description: Perfil de usuario no encontrado (aunque autenticado, el usuario no existe en DB, caso raro).
+        '500':
+          description: Error interno del servidor.
+    put:
+      summary: Actualizar el perfil del usuario autenticado.
+      tags:
+        - Users
+      description: Permite al usuario actualizar su propia información (nombre, email, etc.) en BE3SHOP.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User_Input' # Usamos User_Input para los campos actualizables
+            examples:
+              updateName:
+                summary: Actualizar solo el nombre
+                value:
+                  firstName: NuevoNombre
+              updateEmail:
+                summary: Actualizar solo el email
+                value:
+                  email: nuevo.email@be3shop.com
+      responses:
+        '200':
+          description: Perfil actualizado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  message: { type: string, example: Profile updated successfully. }
+                  payload: { $ref: '#/components/schemas/User' }
+        '400':
+          description: Solicitud inválida (ej. formato de email incorrecto).
+        '401':
+          description: No autorizado.
+        '404':
+          description: Perfil de usuario no encontrado.
+        '500':
+          description: Error interno del servidor.
+
+  /api/users:
+    get:
+      summary: Obtener todos los usuarios (solo Admin).
+      tags:
+        - Users
+      description: Lista todos los usuarios registrados en el sistema BE3SHOP con opciones de paginación y filtrado. Requiere rol de administrador.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+          description: Número de página para la paginación.
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10 }
+          description: Número de elementos por página.
+        - in: query
+          name: role
+          schema: { type: string, enum: [user, admin] }
+          description: Filtrar usuarios por rol.
+        - in: query
+          name: email
+          schema: { type: string }
+          description: Filtrar usuarios por email (búsqueda parcial insensible a mayúsculas).
+        - in: query
+          name: sort
+          schema: { type: string, enum: ['email_asc', 'email_desc', 'firstName_asc', 'firstName_desc'] }
+          description: Campo por el que ordenar los resultados (ej. 'email_asc').
+      responses:
+        '200':
+          description: Lista de usuarios recuperada exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  payload:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  totalPages: { type: integer, example: 5 }
+                  prevPage: { type: integer, example: 1 }
+                  nextPage: { type: integer, example: 3 }
+                  page: { type: integer, example: 2 }
+                  hasPrevPage: { type: boolean, example: true }
+                  hasNextPage: { type: boolean, example: true }
+        '401':
+          description: No autorizado (no se proporcionó token o es inválido).
+        '403':
+          description: Prohibido (el usuario no tiene rol de administrador).
+        '500':
+          description: Error interno del servidor.
+
+  /api/users/{uid}:
+    get:
+      summary: Obtener un usuario por ID (solo Admin).
+      tags:
+        - Users
+      description: Recupera los detalles de un usuario específico por su ID en BE3SHOP. Requiere rol de administrador.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema: { type: string }
+          description: ID único del usuario a obtener.
+      responses:
+        '200':
+          description: Usuario recuperado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  payload: { $ref: '#/components/schemas/User' }
+        '401':
+          description: No autorizado.
+        '403':
+          description: Prohibido.
+        '404':
+          description: Usuario no encontrado.
+        '500':
+          description: Error interno del servidor.
+    put:
+      summary: Actualizar un usuario por ID (solo Admin).
+      tags:
+        - Users
+      description: Modifica los detalles de un usuario específico por su ID en BE3SHOP. Requiere rol de administrador.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema: { type: string }
+          description: ID único del usuario a actualizar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User_Input' # Puede actualizar cualquier campo del User_Input
+      responses:
+        '200':
+          description: Usuario actualizado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  message: { type: string, example: User updated successfully. }
+                  payload: { $ref: '#/components/schemas/User' }
+        '400':
+          description: Solicitud inválida.
+        '401':
+          description: No autorizado.
+        '403':
+          description: Prohibido.
+        '404':
+          description: Usuario no encontrado.
+        '500':
+          description: Error interno del servidor.
+    delete:
+      summary: Eliminar (soft delete) un usuario por ID (solo Admin).
+      tags:
+        - Users
+      description: Marca un usuario como inactivo en lugar de borrarlo permanentemente en BE3SHOP. Requiere rol de administrador.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema: { type: string }
+          description: ID único del usuario a eliminar lógicamente.
+      responses:
+        '200':
+          description: Usuario eliminado lógicamente exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  message: { type: string, example: User soft-deleted successfully. }
+                  payload: { $ref: '#/components/schemas/User' }
+        '401':
+          description: No autorizado.
+        '403':
+          description: Prohibido.
+        '404':
+          description: Usuario no encontrado o ya inactivo.
+        '500':
+          description: Error interno del servidor.
+
+# Definición de esquemas de seguridad
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT # Indica que se espera un token JWT
+    description: Ingresa tu token JWT con el prefijo 'Bearer '. Ejemplo: 'Bearer abc.xyz.123'
