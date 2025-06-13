@@ -1,6 +1,6 @@
 // src/controllers/cart.controller.js
-import CartDAO from '../daos/Cart.dao.js';
-import ProductDAO from '../daos/Product.dao.js';
+import CartDAO from '../dao/Cart.dao.js';
+import ProductDAO from '../dao/Product.dao.js';
 import { logger } from '../utils/logger.js';
 
 const cartDAO = new CartDAO();

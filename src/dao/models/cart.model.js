@@ -1,13 +1,14 @@
+// src/dao/models/Cart.model.js
 import mongoose from "mongoose";
 
 const collection = "carts";
 
 const schema = new mongoose.Schema({
     user: {
-        type: mongoose.SchemaTypes.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'users', // References the 'users' collection (from User.model.js)
         required: true,
-        unique: true // Ensures a user can only have one active cart
+        unique: true // Ensures a user can only have one active cart. This creates a unique index.
     },
     products: [
         {
@@ -25,12 +26,17 @@ const schema = new mongoose.Schema({
         }
     ],
     // Optional: Add timestamps for creation/update
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    // Mongoose has a built-in option for this, which is cleaner
+    // createdAt: { type: Date, default: Date.now }, // Can remove if using timestamps: true
+    // updatedAt: { type: Date, default: Date.now }  // Can remove if using timestamps: true
+}, {
+    // Add timestamps option here for automatic createdAt and updatedAt fields
+    timestamps: true
 });
 
-// Optional: Add an index for faster lookup by user
-schema.index({ user: 1 });
+// REMOVED: schema.index({ user: 1 });
+// The 'unique: true' property on the 'user' field already creates the necessary unique index.
+// This was the cause of the "Duplicate schema index" warning.
 
 const cartModel = mongoose.model(collection, schema);
 

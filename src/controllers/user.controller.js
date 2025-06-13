@@ -1,5 +1,5 @@
 // src/controllers/user.controller.js
-import UsersDAO from '../daos/Users.dao.js'; // Importamos el DAO de usuarios
+import UsersDAO from '../dao/Users.dao.js';
 import { logger } from '../utils/logger.js';
 
 const usersDAO = new UsersDAO(); // Instanciamos el DAO

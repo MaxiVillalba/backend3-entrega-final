@@ -1,15 +1,26 @@
+import app from './src/app.js'; 
 import mongoose from 'mongoose';
-import app from './src/app.js';
 import dotenv from 'dotenv';
+import { logger } from './src/utils/logger.js'; 
 
-dotenv.config();
-const PORT = process.env.PORT || 8000; 
+dotenv.config(); 
 
-mongoose.connect(process.env.MONGO_URI)
-.then(()=> {
-    console.log('MongoDB connected');
-    app.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 8000;
+const MONGO_URL = process.env.MONGO_URL; 
+
+if (!MONGO_URL) {
+    logger.fatal("MONGO_URL not defined in .env file. Exiting application.");
+    process.exit(1);
+}
+
+mongoose.connect(MONGO_URL)
+    .then(() => {
+        logger.info('MongoDB connected successfully!');
+        app.listen(PORT, () => {
+            logger.info(`Server running on http://localhost:${PORT}`);
+        });
     })
-})
-.catch(error => console.error('Connection Error:', error));
+    .catch(error => {
+        logger.fatal(`Failed to connect to MongoDB: ${error.message}`);
+        process.exit(1); 
+    });

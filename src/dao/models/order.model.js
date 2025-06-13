@@ -1,3 +1,4 @@
+// src/dao/models/Order.model.js
 import mongoose from "mongoose";
 
 const collection = "orders";
@@ -43,11 +44,14 @@ const schema = new mongoose.Schema({
         default: Date.now
     },
     // Optional: Add timestamps for creation/update
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    // createdAt: { type: Date, default: Date.now }, // Can remove if using timestamps: true
+    // updatedAt: { type: Date, default: Date.now }  // Can remove if using timestamps: true
+}, {
+    // Add timestamps option here for automatic createdAt and updatedAt fields
+    timestamps: true
 });
 
-// Optional: Add an index for faster lookup by user
+// This index is fine here, as 'user' is not marked as unique directly in the field definition.
 schema.index({ user: 1 });
 
 const orderModel = mongoose.model(collection, schema);

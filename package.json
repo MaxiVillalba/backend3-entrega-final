@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon server.js",
-    "dev": "nodemon src/app.js",
+    "dev": "nodemon src/server.js",
     "test": "mocha test/users.test.js"
   },
   "keywords": [],

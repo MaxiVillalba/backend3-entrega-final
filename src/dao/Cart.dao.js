@@ -1,5 +1,4 @@
-import cartModel from "../models/Cart.model.js"; // Import the Mongoose model
-
+import cartModel from "./models/cart.model.js";
 export default class CartDAO { // Renamed to CartDAO for clarity
 
     /**

@@ -1,5 +1,4 @@
-import orderModel from "../models/Order.model.js"; 
-
+import orderModel from "./models/order.model.js";
 export default class OrderDAO { 
 
     /**
