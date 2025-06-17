@@ -1,6 +1,20 @@
 # backend3-entrega-final
 Entrega final de backend III
 
+
+🚀 Sobre esta API - BE3SHOP
+Esta es una API RESTful desarrollada con Node.js y Express.js, diseñada para funcionar como el backend principal de una aplicación de e-commerce (be3shop). 
+
+Su propósito es gestionar las operaciones de una tienda online, proveyendo endpoints para la administración de productos, usuarios, carritos de compra y órdenes. Utiliza MongoDB como base de datos para una persistencia de datos eficiente y flexible.
+
+La API está completamente contenerizada con Docker para asegurar un despliegue consistente en cualquier entorno, y está preparada para ser orquestada con Kubernetes (demostrado con Minikube) utilizando Secrets para la gestión segura de variables de entorno.
+
+Tecnologías Clave:
+Node.js & Express.js: Plataforma y framework para el desarrollo del servidor.
+MongoDB & Mongoose: Base de datos NoSQL y ODM para interacción con la DB.
+Docker: Contenerización de la aplicación.
+Kubernetes (Minikube): Orquestación y gestión de contenedores.
+
 ✨ Requisitos Previos
 Es necesario tener instalados:
 Git
@@ -13,8 +27,6 @@ powershell
 git clone https://github.com/MaxiVillalba/backend3-entrega-final.git
 cd entrega-final
 
-mongodb://localhost:27017/be3shop
-port 8000
 
 Ejecutar la aplicación con docker
 La imagen de docker para esta app está disponible en docker hub en el siguiente link:
