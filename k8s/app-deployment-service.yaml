@@ -19,7 +19,7 @@ metadata:
     app: be3shop-service
     tier: backend
 spec:
-  replicas: 2
+  replicas: 5
   selector:
     matchLabels:
       app: be3shop-service
@@ -35,7 +35,10 @@ spec:
             - containerPort: 8000
           env:
             - name: MONGO_URL
-              value: mongodb://mongo-service:27017/be3shop # Asegúrate que 'mongo-service' sea el nombre del servicio de tu MongoDB en K8s
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: MONGO_URL
           imagePullPolicy: Always
           resources:
             requests:
@@ -46,7 +49,7 @@ spec:
               cpu: "200m"
           livenessProbe:
             httpGet:
-              path: /health # Asegúrate de que tu app Node.js tenga este endpoint
+              path: /health
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -54,7 +57,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /ready # Asegúrate de que tu app Node.js tenga este endpoint
+              path: /ready
               port: 8000
             initialDelaySeconds: 15
             periodSeconds: 5
