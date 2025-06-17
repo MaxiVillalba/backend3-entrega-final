@@ -1,127 +1,111 @@
-import request from 'supertest';
-import app from '../src/app.js'; 
+import chai from 'chai';
+import supertest from 'supertest';
 import mongoose from 'mongoose';
+import app from '../src/app.js'; 
 import User from '../src/models/userModel.js'; 
-import Assert from 'node:assert';
 
-const assert = Assert.strict;
+const expect = chai.expect;
+const requester = supertest(app);
 
-const MONGODB_API_TEST_URI = process.env.MONGO_API_TEST_URL || 'mongodb://127.0.0.1:27017/be3shop_api_test';
+const MONGODB_API_TEST_URI = process.env.MONGO_API_TEST_URL || 'mongodb://127.0.0.1:27017/be3shop_api_test_chai';
 
-describe('User API Integration Tests', function() {
+describe('Testing de API de Usuarios', () => {
     this.timeout(10000);
 
-    before(async function() {
-        await mongoose.connect(MONGODB_API_TEST_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('Conectado a la DB de pruebas de API.');
+    before(async () => {
+        await mongoose.connect(MONGODB_API_TEST_URI);
     });
 
-    beforeEach(async function() {
+    beforeEach(async () => {
         try {
             await User.deleteMany({});
         } catch (e) {
             if (e.code === 26 || e.message.includes('ns not found')) {
-                 console.log('Colección de usuarios no encontrada en la DB de API, se creará al insertar.');
+                // Ignorar si la colección no existe
             } else {
                 throw e;
             }
         }
     });
 
-    after(async function() {
+    after(async () => {
         await mongoose.connection.db.dropDatabase();
         await mongoose.connection.close();
-        console.log('DB de pruebas de API eliminada y conexión cerrada.');
     });
 
-    it('debería registrar un nuevo usuario exitosamente (POST /api/users/register)', async function() {
+    it('El endpoint POST /api/users/register debe crear un usuario correctamente y devolver un id', async () => {
         const userData = {
-            username: 'apiuser1',
-            email: 'api1@example.com',
-            password: 'ApiPassword123!',
+            username: 'chaiuser1',
+            email: 'chai1@example.com',
+            password: 'ChaiPassword123!',
         };
 
-        const res = await request(app)
-            .post('/api/users/register')
-            .send(userData);
+        const result = await requester.post('/api/users/register').send(userData);
 
-        assert.strictEqual(res.statusCode, 201, 'El código de estado debería ser 201');
-        assert.strictEqual(res.body.message, 'Usuario registrado exitosamente', 'El mensaje de éxito debería coincidir');
-        assert.ok(res.body.user._id, 'El usuario retornado debería tener un ID');
-        assert.strictEqual(res.body.user.username, userData.username, 'El nombre de usuario debería coincidir');
-        assert.strictEqual(res.body.user.email, userData.email, 'El email debería coincidir');
-        assert.ok(!res.body.user.password, 'La contraseña no debería ser retornada en la respuesta');
+        expect(result.status).to.equal(201);
+        expect(result.body).to.have.property('message', 'Usuario registrado exitosamente');
+        expect(result.body).to.have.property('user');
+        expect(result.body.user).to.have.property('_id').and.to.be.a('string');
+        expect(result.body.user).to.have.property('username', userData.username);
+        expect(result.body.user).to.not.have.property('password');
     });
 
-    it('debería retornar 400 si faltan campos obligatorios durante el registro (POST /api/users/register)', async function() {
+    it('El endpoint POST /api/users/register debe retornar 400 si faltan campos obligatorios', async () => {
         const userData = {
-            username: 'incompleteapiuser',
-            email: 'incompleteapi@example.com',
+            username: 'incompleteuser',
+            email: 'incomplete@example.com',
         };
 
-        const res = await request(app)
-            .post('/api/users/register')
-            .send(userData);
+        const result = await requester.post('/api/users/register').send(userData);
 
-        assert.strictEqual(res.statusCode, 400, 'El código de estado debería ser 400');
-        assert.ok(res.body.message, 'Debería haber un mensaje de error definido');
-        assert.ok(res.body.message.includes('password') || res.body.message.includes('Missing fields'), 'El mensaje de error debería indicar la falta de datos');
+        expect(result.status).to.equal(400);
+        expect(result.body).to.have.property('message');
+        expect(result.body.message).to.include('password');
     });
 
-    it('debería iniciar sesión a un usuario existente y retornar un token (POST /api/users/login)', async function() {
+    it('El endpoint POST /api/users/login debe loguear un usuario y devolver un token', async () => {
         const userData = {
-            username: 'loginapiuser',
-            email: 'loginapi@example.com',
-            password: 'LoginApiPassword123!',
+            username: 'loginchaiuser',
+            email: 'loginchai@example.com',
+            password: 'LoginChaiPassword123!',
         };
-        await request(app).post('/api/users/register').send(userData);
+        await requester.post('/api/users/register').send(userData);
 
         const loginCredentials = {
             email: userData.email,
             password: userData.password,
         };
 
-        const res = await request(app)
-            .post('/api/users/login')
-            .send(loginCredentials);
+        const result = await requester.post('/api/users/login').send(loginCredentials);
 
-        assert.strictEqual(res.statusCode, 200, 'El código de estado debería ser 200');
-        assert.ok(res.body.token, 'La respuesta debería contener un token');
-        assert.strictEqual(res.body.message, 'Inicio de sesión exitoso', 'El mensaje de éxito de login debería coincidir');
+        expect(result.status).to.equal(200);
+        expect(result.body).to.have.property('token').and.to.be.a('string');
+        expect(result.body).to.have.property('message', 'Inicio de sesión exitoso');
     });
 
-    it('debería obtener el perfil del usuario para un usuario autenticado (GET /api/users/me)', async function() {
+    it('El endpoint GET /api/users/me debe devolver el perfil del usuario autenticado', async () => {
         const userData = {
-            username: 'profileapiuser',
-            email: 'profileapi@example.com',
-            password: 'ProfileApiPassword123!',
+            username: 'profilechaiuser',
+            email: 'profilechai@example.com',
+            password: 'ProfileChaiPassword123!',
         };
-        await request(app).post('/api/users/register').send(userData);
+        await requester.post('/api/users/register').send(userData);
 
-        const loginRes = await request(app)
-            .post('/api/users/login')
-            .send({ email: userData.email, password: userData.password });
-        const token = loginRes.body.token;
+        const loginResult = await requester.post('/api/users/login').send({ email: userData.email, password: userData.password });
+        const token = loginResult.body.token;
 
-        const res = await request(app)
-            .get('/api/users/me')
-            .set('Authorization', `Bearer ${token}`);
+        const result = await requester.get('/api/users/me').set('Authorization', `Bearer ${token}`);
 
-        assert.strictEqual(res.statusCode, 200, 'El código de estado debería ser 200');
-        assert.strictEqual(res.body.username, userData.username, 'El nombre de usuario en el perfil debería coincidir');
-        assert.strictEqual(res.body.email, userData.email, 'El email en el perfil debería coincidir');
-        assert.ok(!res.body.password, 'La contraseña no debería estar presente en el perfil retornado');
+        expect(result.status).to.equal(200);
+        expect(result.body).to.have.property('username', userData.username);
+        expect(result.body).to.have.property('email', userData.email);
+        expect(result.body).to.not.have.property('password');
     });
 
-    it('debería retornar 401 si se intenta acceder al perfil sin un token de autenticación (GET /api/users/me)', async function() {
-        const res = await request(app)
-            .get('/api/users/me');
+    it('El endpoint GET /api/users/me debe retornar 401 si no hay token de autenticación', async () => {
+        const result = await requester.get('/api/users/me');
 
-        assert.strictEqual(res.statusCode, 401, 'El código de estado debería ser 401');
-        assert.ok(res.body.message, 'Debería haber un mensaje de error definido');
-        assert.strictEqual(res.body.message, 'No autorizado', 'El mensaje de error debería ser "No autorizado"');
+        expect(result.status).to.equal(401);
+        expect(result.body).to.have.property('message', 'No autorizado');
     });
 });

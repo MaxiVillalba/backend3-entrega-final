@@ -5,8 +5,8 @@
   "scripts": {
     "start": "nodemon server.js",
     "dev": "nodemon src/server.js",
-    "test:dao": "mocha test/user.test.js",
-    "test:api": "mocha test/supertest.js",
+    "test:dao": "mocha --experimental-modules --es-module-specifier-resolution=node test/user.test.js",
+    "test:api": "mocha --experimental-modules --es-module-specifier-resolution=node test/supertest.js",
     "test": "npm run test:dao && npm run test:api"
   },
   "keywords": [],
