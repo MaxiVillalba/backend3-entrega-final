@@ -1,5 +1,9 @@
 import express from 'express';
+import mongoose from 'mongoose';
+import handlebars from 'express-handlebars'
 import cookieParser from 'cookie-parser';
+
+
 import cors from 'cors';
 
 import usersRouter from './routes/users.routes.js';
@@ -8,7 +12,9 @@ import cartRouter from './routes/cart.routes.js';
 import orderRouter from './routes/order.routes.js';
 import mockRouter from './routes/mocks.routes.js';
 import sessionsRouter from './routes/session.routes.js';
+import statusRouter from './routes/status.routes.js';
 
+import { logger } from './utils/logger.js';
 import { addLogger } from './middlewares/infoLoggers.js'; 
 
 import swaggerJSDoc from 'swagger-jsdoc';
@@ -26,6 +32,7 @@ app.use(cors());
 
 const spec = swaggerJSDoc(swaggerOptions);
 app.use('/api/docs', swaggerUiExpress.serve, swaggerUiExpress.setup(spec));
+app.use('/', statusRouter); //las rutas de health y ready estarán disponibles en la raiz
 
 app.use('/api/users', usersRouter);
 app.use('/api/products', productsRouter);

@@ -1,14 +1,15 @@
+## Contiene el service como el deployment de la aplicación.
 apiVersion: v1
-kind: Service 
+kind: Service
 metadata:
   name: be3shop-service
 spec:
   selector:
-    app: be3shop-service 
-  ports: 
+    app: be3shop-service
+  ports:
     - port: 80
       targetPort: 8000
-  type: LoadBalancer 
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -18,7 +19,7 @@ metadata:
     app: be3shop-service
     tier: backend
 spec:
-  replicas: 5
+  replicas: 2
   selector:
     matchLabels:
       app: be3shop-service
@@ -34,7 +35,7 @@ spec:
             - containerPort: 8000
           env:
             - name: MONGO_URL
-              value: mongodb://mongo-service:27017/be3shop
+              value: mongodb://mongo-service:27017/be3shop # Asegúrate que 'mongo-service' sea el nombre del servicio de tu MongoDB en K8s
           imagePullPolicy: Always
           resources:
             requests:
@@ -45,7 +46,7 @@ spec:
               cpu: "200m"
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health # Asegúrate de que tu app Node.js tenga este endpoint
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -53,7 +54,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /ready # Asegúrate de que tu app Node.js tenga este endpoint
               port: 8000
             initialDelaySeconds: 15
             periodSeconds: 5
