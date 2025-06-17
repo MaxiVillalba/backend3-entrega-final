@@ -1,3 +1,11 @@
 warning: Route not found: GET /
 warning: Route not found: GET /favicon.ico
 warning: Route not found: GET /api
+warning: Route not found: GET /api
+warning: Route not found: GET /home
+warning: Route not found: GET /css/app.css
+warning: Route not found: GET /js/app.js
+warning: Route not found: POST /api/mocks/generateData?users=5&products=10
+warning: Route not found: GET /css/app.css
+warning: Route not found: GET /js/app.js
+warning: Route not found: POST /api/mocks/generateData?users=5&products=10

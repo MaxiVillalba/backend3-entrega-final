@@ -1,8 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import handlebars from 'express-handlebars'
+import handlebars from 'express-handlebars';
 import cookieParser from 'cookie-parser';
-
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import cors from 'cors';
 
@@ -15,24 +17,49 @@ import sessionsRouter from './routes/session.routes.js';
 import statusRouter from './routes/status.routes.js';
 
 import { logger } from './utils/logger.js';
-import { addLogger } from './middlewares/infoLoggers.js'; 
+import { addLogger } from './middlewares/infoLoggers.js';
 
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUiExpress from 'swagger-ui-express';
 import { swaggerOptions } from './config/swaggerOptions.config.js';
 
-
 const app = express();
 
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); 
-app.use(cookieParser()); 
-app.use(addLogger); 
-app.use(cors()); 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(addLogger);
+app.use(cors());
+
+app.engine('handlebars', handlebars.engine({
+    defaultLayout: 'main',
+    layoutsDir: path.join(__dirname, 'views', 'layouts'),
+    partialsDir: path.join(__dirname, 'views', 'partials')
+}));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'handlebars');
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 const spec = swaggerJSDoc(swaggerOptions);
 app.use('/api/docs', swaggerUiExpress.serve, swaggerUiExpress.setup(spec));
-app.use('/', statusRouter); //las rutas de health y ready estarán disponibles en la raiz
+
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end();
+});
+
+app.use('/', statusRouter);
+
+app.get('/', (req, res) => {
+    req.logger.info('Accessed root path / - Rendering home view');
+    res.status(200).render('home', {
+        title: 'Inicio BE3SHOP',
+        welcomeMessage: '¡Bienvenido a BE3SHOP!',
+    });
+});
 
 app.use('/api/users', usersRouter);
 app.use('/api/products', productsRouter);
@@ -41,29 +68,8 @@ app.use('/api/orders', orderRouter);
 app.use('/api/mocks', mockRouter);
 app.use('/api/sessions', sessionsRouter);
 
-app.get('/', (req, res) => {
-    req.logger.info('Accessed root path / - Sending API welcome message');
-    res.status(200).json({
-        status: 'success',
-        message: 'Welcome to the E-commerce API!',
-        apiVersion: '1.0',
-        documentation: '/api/docs' 
-    });
-});
-
 app.use((req, res) => {
-    req.logger.warning(`Route not found: ${req.method} ${req.url}`);
-    res.status(404).json({ status: 'error', message: 'Route not found' });
-});
-
-app.get('/favicon.ico', (req, res) => {
-    // 204 No Content significa que la solicitud fue exitosa pero no hay contenido para enviar.
-    // Esto evita que el navegador pida el favicon repetidamente o que genere un 404 en tus logs.
-    res.status(204).end();
-});
-
-app.use((req, res) => {
-    req.logger.warning(`Route not found: ${req.method} ${req.url}`);
+    logger.warning(`Route not found: ${req.method} ${req.url}`);
     res.status(404).json({ status: 'error', message: 'Route not found' });
 });
 
